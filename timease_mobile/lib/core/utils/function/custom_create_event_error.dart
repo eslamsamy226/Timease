@@ -5,14 +5,15 @@ bool isDisplayed = false;
 
 void showError({
   required BuildContext context,
-  required String msg
+  required String msg,
+  double ?top,
 }) {
   if (isDisplayed) {
     _overlayEntry?.remove();
     _overlayEntry = null;
   }
   isDisplayed = true;
-  _overlayEntry = _createOverlayEntry(msg: msg);
+  _overlayEntry = _createOverlayEntry(msg: msg,top: top);
   Overlay.of(context).insert(_overlayEntry!);
 
   Future.delayed(Duration(seconds: 3), () {
@@ -22,12 +23,12 @@ void showError({
   });
 }
 
-OverlayEntry _createOverlayEntry({required String msg}) {
+OverlayEntry _createOverlayEntry({required String msg,double ?top}) {
   return OverlayEntry(
     builder: (context) => Positioned(
-      top: 100,
-      right: 44,
-      left: 44,
+      top: top??100,
+      right: 42,
+      left: 42,
       child: Material(
         color: Colors.transparent,
         child: Container(

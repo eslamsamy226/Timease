@@ -2,45 +2,109 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:timease_mobile/core/utils/cash_helper.dart';
-import 'package:timease_mobile/core/utils/function/custom_create_event_error.dart';
 import 'package:timease_mobile/core/utils/function/custom_toast.dart';
-import 'package:timease_mobile/core/widgets/custom_full_button.dart';
 import 'package:timease_mobile/core/widgets/custom_loading_button.dart';
+import 'package:timease_mobile/features/event/data/models/event_model.dart';
 import 'package:timease_mobile/features/event/presentation/manger/event_cubit/user_events_cubit.dart';
 import 'package:timease_mobile/features/event/presentation/manger/event_cubit/user_events_state.dart';
-import 'package:timease_mobile/features/event/presentation/views/widgets/custom_creare_event_name.dart';
-import 'package:timease_mobile/features/event/presentation/views/widgets/custom_create_event_availabilty.dart';
+import 'package:timease_mobile/features/event/presentation/views/widgets/custom_create_event_name.dart';
+import 'package:timease_mobile/features/event/presentation/views/widgets/custom_create_event_availability.dart';
 import 'package:timease_mobile/features/event/presentation/views/widgets/custom_create_event_close.dart';
-import 'package:timease_mobile/features/event/presentation/views/widgets/custom_create_event_descriptionost.dart';
+import 'package:timease_mobile/features/event/presentation/views/widgets/custom_create_event_description.dart';
 import 'package:timease_mobile/features/event/presentation/views/widgets/custom_create_event_divider.dart';
 import 'package:timease_mobile/features/event/presentation/views/widgets/custom_create_event_host.dart';
 import 'package:timease_mobile/features/event/presentation/views/widgets/custom_create_event_invitee.dart';
 import 'package:timease_mobile/features/event/presentation/views/widgets/custom_create_event_location.dart';
 import 'package:timease_mobile/features/event/presentation/views/widgets/custom_create_event_duration.dart';
+import 'package:timease_mobile/features/event/presentation/views/widgets/custom_create_event_save_changes_button.dart';
+import '../../../../core/utils/service_locator.dart';
 import '../../data/models/create_event_model.dart';
+import '../../data/repos/event_repo_impl.dart';
 
 class CreateNewEventScreen extends StatefulWidget {
-  const CreateNewEventScreen({super.key});
+  const CreateNewEventScreen({
+    super.key,
+    this.eventModel,
+  });
+
+  final EventModel? eventModel;
 
   @override
   State<CreateNewEventScreen> createState() => _CreateNewEventScreenState();
 }
 
 class _CreateNewEventScreenState extends State<CreateNewEventScreen> {
-  List<AvailabilitiesItemModel> availabilitiesItemModelList = [];
-  List<TextEditingController> startTimeList =
-      List.generate(7, (_) => TextEditingController(text: '10:30'));
-  List<TextEditingController> endTimeList =
-      List.generate(7, (_) => TextEditingController(text: '14:40'));
-  TextEditingController schedulingRangeController =
-      TextEditingController(text: '30');
+  @override
+  void initState() {
+    super.initState();
+    if (widget.eventModel == null) {
+      isPeriodic = true;
+      selectedTimeType = 'min';
+      selectedDuration = '15 min';
+      titleController = TextEditingController();
+      startTimeList =
+          List.generate(7, (_) => TextEditingController(text: '12:40'));
+      endTimeList =
+          List.generate(7, (_) => TextEditingController(text: '14:40'));
+      schedulingRangeController = TextEditingController(text: '30');
+      availabilitiesItemModelList = [];
+      customController = TextEditingController();
+      titleController = TextEditingController();
+      descriptionController = TextEditingController();
+      inviteeLimitController = TextEditingController(text: '2');
+    }
+    else {
+      List<AvailabilitiesItemModel> ava=[];
+      if(!widget.eventModel!.isPeriodic!) {
+        for (int i = 0; i < widget.eventModel!.availabilities!.length; i++) {
+          ava.add(AvailabilitiesItemModel.fromJson(
+              widget.eventModel!.availabilities![i].toJson()));
+        }
+      }
+        availabilitiesItemModelList = ava;
+      var list=UserEventsCubit(getIt.get<EventRepoImpl>())
+          .getStartAndEndTime(
+          availabilitiesItemModelList: widget.eventModel!.availabilities!,
+          isPeriodic: widget.eventModel!.isPeriodic!);
+        startTimeList = list[0];
+        endTimeList = list[1];
+        for(int i=0;i<startTimeList.length;i++){
+          if(startTimeList[i].text.isEmpty)
+            {
+              isUnavailable[i]=true;
+            }
+        }
+        selectedDuration = 'Custom';
+        customController =
+            TextEditingController(text: widget.eventModel!.duration.toString());
+        schedulingRangeController = TextEditingController(
+            text: widget.eventModel!.schedulingRange.toString());
+        isPeriodic = widget.eventModel!.isPeriodic!;
+        titleController = TextEditingController(text: widget.eventModel!.title);
+        inviteeLimitController = TextEditingController(
+            text: widget.eventModel!.maxAttendees.toString());
+        descriptionController =
+            TextEditingController(text: widget.eventModel!.description);
+      }
+
+  }
+
+  late String selectedTimeType = 'min';
+  late bool isPeriodic;
+  late List<TextEditingController> startTimeList;
+  late TextEditingController schedulingRangeController;
+  late String selectedDuration;
+  late List<TextEditingController> endTimeList;
+  late List<AvailabilitiesItemModel> availabilitiesItemModelList;
+  late TextEditingController customController;
+  late TextEditingController titleController;
+  late TextEditingController inviteeLimitController;
+  late TextEditingController descriptionController;
   List<bool> isUnavailable = List.filled(7, false);
-  bool isPeriodic = true;
   bool isOpenDuration = false;
   bool isInviteeOpen = false;
   bool isDescriptionOpen = false;
   bool isHostOpen = false;
-  String selectedDuration = "15 min";
   final List<String> durations = [
     "15 min",
     "30 min",
@@ -48,16 +112,10 @@ class _CreateNewEventScreenState extends State<CreateNewEventScreen> {
     "60 min",
     "Custom"
   ];
-  String selectedTimeType = "min";
   final List<String> timeType = [
     "min",
     "hr",
   ];
-  TextEditingController titleController = TextEditingController();
-  TextEditingController customController = TextEditingController();
-  TextEditingController descriptionController = TextEditingController();
-  TextEditingController inviteeLimitController =
-      TextEditingController(text: '2');
   var formKey = GlobalKey<FormState>();
   List<String> days = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
   bool isDayUnavailable = false;
@@ -80,7 +138,6 @@ class _CreateNewEventScreenState extends State<CreateNewEventScreen> {
                     CustomCreateEventDivider(),
                     CustomCreateEventDuration(
                       isOpen: isOpenDuration,
-                      formKey: formKey,
                       customController: customController,
                       selectedDuration: selectedDuration,
                       selectedTimeType: selectedTimeType,
@@ -155,66 +212,9 @@ class _CreateNewEventScreenState extends State<CreateNewEventScreen> {
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 23.0),
-                      child: state is CreateEventsLoading
+                      child: state is CreateEventsLoading || state is UpdateEventsLoading
                           ? CustomLoadingButton()
-                          : CustomFullButton(
-                              height: 45,
-                              text: 'Save changes',
-                              onPressed: () {
-                                var availability=userEventsCubit.getAvailabilitiesList(
-                                  isPeriodic: isPeriodic,
-                                  availabilitiesItemModelList:
-                                  availabilitiesItemModelList
-                                      .map((e) => e.toJson())
-                                      .toList(),
-                                  isUnavailable: isUnavailable,
-                                  startTimeList: startTimeList,
-                                  endTimeList: endTimeList,
-                                );
-                                if (formKey.currentState!.validate()) {
-                                  if(availability.isEmpty)
-                                  {
-                                    showError(context: context,msg: 'Availability is required. Please enter your available time.');
-                                  }
-                                 else if(descriptionController.text.isEmpty)
-                                  {
-                                    showError(context: context,msg: 'Event description is required.Provide details about the event.');
-                                  }
-                                 else {
-                                    CreateEventModel createEventModel =
-                                        CreateEventModel.fromJson({
-                                      "title": titleController.text,
-                                      "description": descriptionController.text,
-                                      "location": "Conference Room A",
-                                      "duration":
-                                          userEventsCubit.getDurationByMinutes(
-                                              customController:
-                                                  customController,
-                                              selectedDuration:
-                                                  selectedDuration,
-                                              selectedTimeType:
-                                                  selectedTimeType),
-                                      "maxAttendees": userEventsCubit
-                                          .getInviteeLimit(
-                                              controller:
-                                                  inviteeLimitController)
-                                          .toString(),
-                                      "schedulingRange": isPeriodic
-                                          ? schedulingRangeController.text
-                                          : null,
-                                      "availabilities":availability,
-                                      "periodic": isPeriodic
-                                    });
-                                    userEventsCubit.createNewEvent(
-                                      createEventModel: createEventModel,
-                                    );
-                                  }
-                                }
-                                else {
-                                  showError(msg: '"Please fill all required fields before proceeding."',context: context);
-                                }
-                              },
-                            ),
+                          : CustomCreateEventSaveChangesButton(userEventsCubit: userEventsCubit, isPeriodic: isPeriodic, availabilitiesItemModelList: availabilitiesItemModelList, isUnavailable: isUnavailable, startTimeList: startTimeList, endTimeList: endTimeList, formKey: formKey, descriptionController: descriptionController, titleController: titleController, customController: customController, selectedDuration: selectedDuration, selectedTimeType: selectedTimeType, inviteeLimitController: inviteeLimitController, schedulingRangeController: schedulingRangeController, widget: widget),
                     )
                   ],
                 ),
@@ -230,7 +230,15 @@ class _CreateNewEventScreenState extends State<CreateNewEventScreen> {
               .getUserEventsList(userId: CashHelper.getData('userId'));
           context.pop();
         }
+        else if (state is UpdateEventsSuccess){
+          customShowToast(msg: 'Event updated successfully');
+          UserEventsCubit.get(context)
+              .getUserEventsList(userId: CashHelper.getData('userId'));
+          context.pop();
+        }
+
       },
     );
   }
 }
+

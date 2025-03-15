@@ -15,7 +15,6 @@ import 'package:timease_mobile/features/event/presentation/views/widgets/add_dat
 import 'package:timease_mobile/features/home/presentation/views/home_screen_view.dart';
 import 'package:timease_mobile/features/splash/presentation/views/splash_view.dart';
 
-
 abstract class AppRouter {
   static const authScreen = '/authScreenView';
   static const loginScreen = '/LoginScreenView';
@@ -23,6 +22,7 @@ abstract class AppRouter {
   static const homeScreen = '/homeScreenView';
   static const eventDetailsScreen = '/eventDetailsScreen';
   static const createNewEventScreen = '/createNewEventScreen';
+  static const updateEventScreen = '/updateEventScreen';
   static const addDateSpecificHourFullScreen = '/addDateSpecificHourFullScreen';
   static late EventModel eventModel;
   static final router = GoRouter(
@@ -65,7 +65,7 @@ abstract class AppRouter {
         builder: (BuildContext context, GoRouterState state) {
           return HomeScreenView(
             bodyIndex: state.extra as int,
-            );
+          );
         },
       ),
       GoRoute(
@@ -78,6 +78,15 @@ abstract class AppRouter {
         path: createNewEventScreen,
         builder: (BuildContext context, GoRouterState state) {
           return CreateNewEventScreen();
+        },
+      ),
+      GoRoute(
+        path: updateEventScreen,
+        builder: (BuildContext context, GoRouterState state) {
+
+          return CreateNewEventScreen(
+           eventModel: state.extra as EventModel,
+          );
         },
       ),
       GoRoute(

@@ -80,7 +80,7 @@ class _DateSpecificHoursState extends State<DateSpecificHours> {
           physics: NeverScrollableScrollPhysics(),
           itemCount: widget.availabilitiesList.length,
           itemBuilder: (context, index) => DateTimeEntry(
-            date: DateFormat('MMMM dd, yyyy').format(DateTime.parse(widget.availabilitiesList[index].date!)),
+            date: DateFormat('MMMM dd, yyyy').format(DateTime.parse(widget.availabilitiesList[index].date.toString())),
             timeRange: "${widget.availabilitiesList[index].startTime} - ${widget.availabilitiesList[index].endTime}",
             onRemove: () {
               widget.availabilitiesList.removeAt(index);
@@ -98,8 +98,8 @@ Future<Map<String, String?>?> pickDateTimeRange(context) async {
   DateTime? pickedDate = await showDatePicker(
     context: context,
     initialDate: DateTime.now(),
-    firstDate: DateTime(2000),
-    lastDate: DateTime(2100),
+    firstDate: DateTime.now(),
+    lastDate: DateTime(DateTime.now().year+1),
   );
 
   if (pickedDate == null) return null;
