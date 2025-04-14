@@ -46,8 +46,8 @@ class MeetingCubit extends Cubit<MeetingStates> {
     return false;
   }
 
-  List<String> getAvailableTimeList(
-      {required EventModel eventModel, DateTime? selectedDate}) {
+  List<String> getAvailableTimeList({required EventModel eventModel, DateTime? selectedDate})
+  {
     if (!eventModel.isPeriodic! && selectedDate != null) {
       for (var element in eventModel.availabilities!) {
         if (DateFormat('yyyy-MM-dd').format(selectedDate) ==
@@ -60,6 +60,7 @@ class MeetingCubit extends Cubit<MeetingStates> {
           checkFullyBooked(availabilityId: availabilityId!, date: DateFormat('yyyy-MM-dd').format(selectedDate))
               .then(
             (value) {
+              availableTimeList=[];
               CheckFullyBookedModel? fullyBooked = value;
               DateTime current = startDateTime;
               DateFormat formatter = DateFormat('hh:mm a');
@@ -76,7 +77,8 @@ class MeetingCubit extends Cubit<MeetingStates> {
 
         }
       }
-    } else if (eventModel.isPeriodic! && selectedDate != null) {
+    }
+    else if (eventModel.isPeriodic! && selectedDate != null) {
       String dayOfWeak = DateFormat('EEEE').format(selectedDate).toUpperCase();
       for (var element in eventModel.availabilities!) {
         if (dayOfWeak == element.dayOfWeek) {
@@ -90,6 +92,7 @@ class MeetingCubit extends Cubit<MeetingStates> {
               CheckFullyBookedModel ?fullyBooked =value;
               DateTime current = startDateTime;
               DateFormat formatter = DateFormat('hh:mm a');
+              availableTimeList=[];
               while (current.isBefore(endDateTime)) {
                 String time12hr = formatter.format(current);
                 String time24hr=DatesConverter.convert12hrTo24(time12Hr: time12hr);
@@ -146,7 +149,8 @@ class MeetingCubit extends Cubit<MeetingStates> {
     required String date,
     required String startTime,
     required String endTime,
-  }) async {
+  }) async
+  {
     emit(CreateMeetingLoadingState());
     var response = await meetingRepo.createMeeting(
       availabilityId: availabilityId,
@@ -167,7 +171,8 @@ class MeetingCubit extends Cubit<MeetingStates> {
   Future<CheckFullyBookedModel?> checkFullyBooked({
     required String availabilityId,
     required String date,
-  }) async {
+  }) async
+  {
     emit(CheckFullyBookedLoadingState());
     var response = await meetingRepo.checkFullyBooked(
       availabilityId: availabilityId,
@@ -187,6 +192,36 @@ class MeetingCubit extends Cubit<MeetingStates> {
     );
 
     return result;
+  }
+
+
+  Future<void> getUserMeetingsList() async {
+    emit(GetUserMeetingsLoadingState());
+    var response = await meetingRepo.getUserMeetings();
+    response.fold(
+          (failure) {
+        emit(GetUserMeetingsFailureState(failure.errMessage));
+      },
+          (userMeetingsList) {
+        emit(GetUserMeetingsSuccessState(userMeetingsList));
+      },
+    );
+  }
+
+  Future<void> deleteUserMeetingItem({
+    required String meetingId,
+  }) async
+  {
+    emit(DeleteUserMeetingLoading());
+    var response = await meetingRepo.deleteUserMeetingItem(meetingId: meetingId);
+    response.fold(
+          (failure)   {
+        emit(DeleteUserMeetingFailure(errMessage: failure.errMessage));
+      },
+          (deleted) {
+        emit(DeleteUserMeetingSuccess(isDeleted: deleted));
+      },
+    );
   }
 
 }

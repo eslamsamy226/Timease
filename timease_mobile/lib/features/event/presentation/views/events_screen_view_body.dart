@@ -5,6 +5,7 @@ import 'package:timease_mobile/core/utils/function/logout.dart';
 import 'package:timease_mobile/core/widgets/custom_shimmer_loading.dart';
 import 'package:timease_mobile/features/event/presentation/manger/event_cubit/user_events_cubit.dart';
 import 'package:timease_mobile/features/event/presentation/manger/event_cubit/user_events_state.dart';
+import 'package:timease_mobile/features/meeting/presentation/manger/meeting_cubit/meeting_state.dart';
 import '../../../../constants.dart';
 import '../../../../core/utils/cash_helper.dart';
 import '../../../../core/widgets/custom_search.dart';
@@ -44,7 +45,7 @@ class _EventsScreenViewBodyState extends State<EventsScreenViewBody> {
                 SizedBox(
                   height: 7,
                 ),
-                CustomSearch(
+                CustomEventSearch(
                   eventListModel: userEventsSuccess.eventsListModel,
                   controller: controller,
                   text: 'Search event Types...',
@@ -82,13 +83,19 @@ class _EventsScreenViewBodyState extends State<EventsScreenViewBody> {
                     ),
               ],
             );
-          } else {
+          }
+          else {
+            if(state is GetOneEventSuccess||state is CreateMeetingSuccessState)
+              {
+                UserEventsCubit userEventsCubit = UserEventsCubit.get(context);
+                userEventsCubit.getUserEventsList(userId: CashHelper.getData('userId'));
+              }
             return Column(
               children: [
                 SizedBox(
                   height: 7,
                 ),
-                CustomSearch(
+                CustomEventSearch(
                   eventListModel: [],
                   controller: controller,
                   text: 'Search event Types...',
@@ -108,18 +115,15 @@ class _EventsScreenViewBodyState extends State<EventsScreenViewBody> {
           if (state is CreateEventsSuccess || state is UpdateEventsSuccess ||state is DeleteUserEventsSuccess) {
             passFirstTime = false;
           }
-          if (state is GetUserEventsSuccess) {
-          }
           else if (state is GetUserEventsFailure) {
             if (state.errMessage == 'JWT token has expired') {
               logout(context: context);
             }
-          } else if (state is GetUserEventsLoading) {
           } else if (state is DeleteUserEventsFailure) {
             await Future.delayed(Duration(seconds: 2));
             customShowToast(
                 msg: 'Failed to delete the event. Please try again later.');
-          } else if (state is DeleteUserEventsSuccess) {
+          }   if (state is DeleteUserEventsSuccess) {
             await Future.delayed(Duration(seconds: 2));
             customShowToast(msg: 'Event deleted successfully');
           }

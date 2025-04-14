@@ -1,60 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:timease_mobile/constants.dart';
+import 'package:timease_mobile/core/utils/function/build_container_decoration.dart';
 import 'package:timease_mobile/features/event/data/models/event_model.dart';
+import '../../../../../core/utils/function/get_last_date.dart';
 import '../../../../../core/utils/function/show_event_bottom_sheet.dart';
 import '../../../../../core/utils/styles.dart';
 
 class CustomEventContainer extends StatelessWidget {
   final EventModel eventModel;
   final Color color;
+  final bool isBooking;
 
   const CustomEventContainer({
     super.key,
     required this.eventModel,
     required this.color,
+    required this.isBooking,
   });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        showEventModelSheet(context,eventModel);
+        if (!eventModel.isPeriodic!) {
+          if (!getLastDate(eventModel: eventModel).isBefore(DateTime.now())) {
+            showEventModelSheet(context, eventModel,isBooking);
+          }
+        } else {
+          showEventModelSheet(context, eventModel,isBooking);
+        }
       },
       child: Container(
-        height: 74,
-        decoration: BoxDecoration(
-            border: Border(
-              right: BorderSide(color: kSecPrimaryColor.shade300, width: 1),
-              top: BorderSide(
-                color: kSecPrimaryColor.shade300,
-                width: 0.6,
-              ),
-              bottom: BorderSide(color: kSecPrimaryColor.shade300, width: 1.2),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.shade200,
-                offset: const Offset(
-                  10.0,
-                  10.0,
-                ),
-                blurRadius: 5.0,
-                spreadRadius: -5.0,
-              ),
-              BoxShadow(
-                color: Colors.grey.shade200,
-                offset: const Offset(
-                  10.0,
-                  -10.0,
-                ),
-                blurRadius: 1.0,
-                spreadRadius: -10.0,
-              ),
-              BoxShadow(
-                color: Colors.white,
-              ),
-            ],
-            borderRadius: BorderRadius.circular(10)),
+        height: 79,
+        decoration: buildContainerDecoration(),
         child: Row(
           children: [
             Container(
