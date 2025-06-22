@@ -16,10 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
@@ -78,22 +75,25 @@ public class NotificationService {
     @Transactional
     public void markNotificationAsDelivered(UUID notificationId) {
         notificationRepository.findById(notificationId).ifPresent(notification -> {
-            notification.setIsDelivered(true);
+            notification.setIsSent(true);
             notificationRepository.save(notification);
             logger.info("Marked notification {} as delivered", notificationId);
         });
     }
 
-    public List<Notification> getUserNotifications(UUID userId) {
+    public Map<String,Object> getUserNotifications(UUID userId) {
         List<Notification> list = notificationRepository.findByUserIdOrderByCreatedAtDesc(userId);
         for (Notification n: list) {
             markNotificationAsDelivered(n.getId());
         }
-        return list;
+        Map<String , Object> res=new HashMap<>();
+        res.put("noOfNotifications", String.valueOf(list.size()));
+        res.put("notifications", list);
+        return res;
     }
 
     public long getUnreadNotificationCount(UUID userId) {
-        return notificationRepository.countByUserIdAndIsDeliveredFalse(userId);
+        return notificationRepository.countByUserIdAndIsSentFalse(userId);
     }
 
     @Transactional
@@ -106,17 +106,15 @@ public class NotificationService {
             for (User user : meeting.getAttendees()) {
                 UUID userId = user.getId();
 
-                boolean alreadySent = notificationRepository.existsByUserIdAndPayload(userId, meetingId.toString());
 
-                if (!alreadySent) {
-                    createNotification(
-                            userId,
-                            title,
-                            message,
-                            "EVENT_BROADCAST",
-                            meetingId.toString()
-                    );
-                }
+                createNotification(
+                        userId,
+                        title,
+                        message,
+                        "EVENT_BROADCAST",
+                        meetingId.toString()
+                );
+
             }
         }
     }

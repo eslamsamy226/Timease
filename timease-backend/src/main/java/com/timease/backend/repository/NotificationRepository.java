@@ -15,9 +15,10 @@ public interface NotificationRepository extends JpaRepository<Notification, UUID
     @Query("SELECT n FROM Notification n WHERE n.isSent = false ORDER BY n.createdAt ASC LIMIT 50")
     List<Notification> findUnsentNotifications();
 
+    @Query("SELECT n FROM Notification n WHERE n.isSent = false and n.userId = :userId ORDER BY n.createdAt Desc")
     List<Notification> findByUserIdOrderByCreatedAtDesc(UUID userId);
 
-    long countByUserIdAndIsDeliveredFalse(UUID userId);
+    long countByUserIdAndIsSentFalse(UUID userId);
 
     boolean existsByUserIdAndPayload(UUID userId, String payload);
 

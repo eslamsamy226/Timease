@@ -5,6 +5,8 @@ import 'package:timease_mobile/core/utils/service_locator.dart';
 import 'package:timease_mobile/features/event/presentation/manger/one_event_cubit/one_event_cubit.dart';
 import 'package:timease_mobile/features/meeting/data/repos/meeting_repo_impl.dart';
 import 'package:timease_mobile/features/meeting/presentation/manger/create_meeting_cubit/create_meeting_cubit.dart';
+import 'package:timease_mobile/features/notification/data/repos/notifications_repo_impl.dart';
+import 'package:timease_mobile/features/notification/presentation/views/manger/notifications_cubit/notifications_cubit.dart';
 import 'core/utils/cash_helper.dart';
 import 'core/utils/function/build_theme_data.dart';
 import 'core/utils/function/change_status_bar_color.dart';
@@ -44,6 +46,10 @@ class MyApp extends StatelessWidget {
         ),
         BlocProvider(
           create: (context) => MeetingCubit(getIt.get<MeetingRepoImpl>()),
+        ),
+        BlocProvider(
+          create: (context) =>
+              NotificationsCubit(getIt.get<NotificationsRepoImpl>()),
         ),
       ],
       child: MaterialApp.router(
