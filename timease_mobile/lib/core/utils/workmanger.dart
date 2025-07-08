@@ -34,7 +34,9 @@ import 'cash_helper.dart';
 // }
 
 class BackgroundTaskService {
-  static final BackgroundTaskService _instance = BackgroundTaskService._internal();
+  static final BackgroundTaskService _instance =
+      BackgroundTaskService._internal();
+
   factory BackgroundTaskService() => _instance;
 
   BackgroundTaskService._internal();
@@ -42,13 +44,10 @@ class BackgroundTaskService {
   Timer? _timer;
 
   void start({required BuildContext context}) {
-    _timer ??= Timer.periodic(Duration(minutes: 5), (timer) {
-      NotificationsCubit notificationsCubit =
-        NotificationsCubit.get(context);
-    notificationsCubit.getUnSentNotifications(
-      userId: CashHelper.getData('userId'),
-      isTimer: true
-    );
+    _timer ??= Timer.periodic(Duration(seconds: 30), (timer) {
+      NotificationsCubit notificationsCubit = NotificationsCubit.get(context);
+      notificationsCubit.getUnSentNotifications(
+          userId: CashHelper.getData('userId'), isTimer: true);
     });
   }
 
